@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import NamedTuple, List
+from collections import Counter
 
 RAW = """0,9 -> 5,9
 8,0 -> 0,8
@@ -26,16 +27,16 @@ class Line(NamedTuple):
         x2, y2 = map(int, end.split(','))
         return Line(x1=x1, y1=y1, x2=x2, y2=y2)
 
-    def is_flat(self) -> bool:
+    def is_hv(self) -> bool:
         return (self.x1 == self.x2) or (self.y1 == self.y2)
 
     def compute_line_corrs(self):
-        if self.is_flat():
-            return self.flat_line_corrs()
+        if self.is_hv():
+            return self.hv_line_corrs()
         else:
             return self.diag_line_corrs()
     
-    def flat_line_corrs(self):
+    def hv_line_corrs(self):
         lx = min(self.x1, self.x2)
         hx = max(self.x1, self.x2)
         ly = min(self.y1, self.y2)
@@ -54,28 +55,28 @@ class Line(NamedTuple):
             yield x_step, y_step
 
 
-def compute_grid_score(lines: List[Line], only_flat_lines: bool = True):
-    grid = defaultdict(lambda: 0)
-    for line in lines:
-        if only_flat_lines and (not line.is_flat()):
-            continue
+def compute_grid_score(lines: List[Line], only_hv_lines: bool = True):
+    counter = Counter(
+        corr
+        for line in lines
+        if (not only_hv_lines) or line.is_hv()
+        for corr in line.compute_line_corrs()
+    )
 
-        for corr in line.compute_line_corrs():
-            grid[corr] += 1
-    return sum(count >= 2 for count in grid.values())
+    return sum(count >= 2 for count in counter.values())
 
 
 if __name__ == '__main__':
     TEST_CASE_INPUT = RAW.splitlines()
     LINES = [Line.parse(x) for x in TEST_CASE_INPUT]
 
-    test_case_sol1 = compute_grid_score(LINES, only_flat_lines=True)
+    test_case_sol1 = compute_grid_score(LINES, only_hv_lines=True)
     print('test case sol part 1')
     print(test_case_sol1)
     assert test_case_sol1 == 5, test_case_sol1
 
     print('test case sol part 2')
-    test_case_sol2 = compute_grid_score(LINES, only_flat_lines=False)
+    test_case_sol2 = compute_grid_score(LINES, only_hv_lines=False)
     print(test_case_sol2)
     assert test_case_sol2 == 12
 
@@ -85,12 +86,12 @@ if __name__ == '__main__':
     CONTEST_LINES = [Line.parse(x)
                      for x in CONTEST_RAW.splitlines()]
 
-    contest_sol_par1 = compute_grid_score(CONTEST_LINES, only_flat_lines=True)
+    contest_sol_par1 = compute_grid_score(CONTEST_LINES, only_hv_lines=True)
     print('contest sol par 1')
     print(contest_sol_par1)
     
     assert contest_sol_par1 == 6005 
-    contest_sol_par2 = compute_grid_score(CONTEST_LINES, only_flat_lines=False)
+    contest_sol_par2 = compute_grid_score(CONTEST_LINES, only_hv_lines=False)
     print('contest sol par 2')
     print(contest_sol_par2)
     assert contest_sol_par2 == 23864
