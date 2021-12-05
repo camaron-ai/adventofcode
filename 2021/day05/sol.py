@@ -1,4 +1,3 @@
-from collections import defaultdict
 from typing import NamedTuple, List
 from collections import Counter
 
