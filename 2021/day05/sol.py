@@ -89,7 +89,7 @@ if __name__ == '__main__':
     print('contest sol par 1')
     print(contest_sol_par1)
     
-    # assert contest_sol_par1 == 6005 
+    assert contest_sol_par1 == 6005 
     contest_sol_par2 = compute_grid_score(CONTEST_LINES, only_flat_lines=False)
     print('contest sol par 2')
     print(contest_sol_par2)
