@@ -51,9 +51,7 @@ class Line(NamedTuple):
 
         x_range = range(self.x1, self.x2 + dx, dx)
         y_range = range(self.y1, self.y2 + dy, dy)
-        for x_step, y_step in zip(x_range, y_range):
-            yield x_step, y_step
-
+        return zip(x_range, y_range)
 
 def compute_grid_score(lines: List[Line], only_hv_lines: bool = True):
     counter = Counter(
