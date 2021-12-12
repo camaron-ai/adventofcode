@@ -30,7 +30,6 @@ class Grid:
                 yield (i + dr, j + dc)
     
     def step(self) -> int:
-        total_flashes = 0
         queue = deque((i, j) for i in range(self.nr) for j in range(self.nc)) 
         flashed = set()
         while queue:
@@ -44,12 +43,11 @@ class Grid:
                 # set it to 0 and increase the number of flashes
                 flashed.add((i, j))
                 self.grid[i][j] = 0
-                total_flashes += 1
                 # add non flashed neighbors to stack
                 for ii, jj in self.get_neighbors(i, j):
                     if (ii, jj) not in flashed:
                         queue.append((ii, jj))
-        return total_flashes
+        return len(flashed)
 
     
     def n_flashes_after(self, step: int) -> int:
