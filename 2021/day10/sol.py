@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 import functools
 
 
@@ -14,9 +14,7 @@ RAW = """[({(<(())[]>[[{[]{<()<>>
 <{([{{}}[<[[[<>{}]]]>[]]"""
 
 
-CLOSE_OPEN_MAPPER = {')': '(', ']': '[', '}': '{', '>': '<'}
-OPEN_CLOSE_MAPPER = {op: close for close, op in CLOSE_OPEN_MAPPER.items()}
-
+OPEN_CLOSE_MAPPER = {'(': ')', '[': ']', '{': '}', '<': '>'}
 
 SYNTAX_POINT = {
 ')': 3,
@@ -33,55 +31,68 @@ AUTOCOMPLETE_POINT = {
 }
 
 
-def get_line_status(line: str) -> Tuple[int, str]:
+def get_first_corrupted_bracket(line: str) -> Optional[str]:
     stack = []
     for ch in line:
-        if ch in CLOSE_OPEN_MAPPER:
-            last_opened_bracked = stack.pop()
-            if last_opened_bracked != CLOSE_OPEN_MAPPER[ch]:
-                return (1, ch)
-        else:
+        # if open bracket, append to the end of the stack
+        if ch in OPEN_CLOSE_MAPPER:
             stack.append(ch)
-    if len(stack) > 0:
-        return (2, ''.join(OPEN_CLOSE_MAPPER[ch] for ch in reversed(stack)))
-    return (0, '')
+        else:
+            # otherwise, the last opened bracket must match
+            last_opened_bracked = stack.pop()
+            if ch != OPEN_CLOSE_MAPPER[last_opened_bracked]:
+                return ch
+    return None
+
+
+def autocomplete_line(line: str) -> List[str]:
+    stack = []
+    for ch in line:
+        # if open bracket, append to the end of the stack
+        if ch in OPEN_CLOSE_MAPPER:
+            stack.append(ch)
+        else:
+            # otherwise, the last opened bracket must match
+            last_opened_bracked = stack.pop()
+            assert ch == OPEN_CLOSE_MAPPER[last_opened_bracked] 
+    assert len(stack) > 0
+    # return the corresponding closing bracket 
+    return [OPEN_CLOSE_MAPPER[ch] for ch in reversed(stack)]
 
 
 
-def compute_syntax_error(line: str) -> int:
-    status, corruped_chunk = get_line_status(line)
-    if status == 1:
+def compute_syntax_score(line: str) -> int:
+    if corruped_chunk := get_first_corrupted_bracket(line):
         return SYNTAX_POINT[corruped_chunk]
     return 0
 
 
-def compute_autocomplete_score(autocompleted_line: str) -> int:
+def compute_autocomplete_score(line: str) -> int:
+    autocompleted_line = autocomplete_line(line)
     return functools.reduce(lambda score, ch: score * 5 + AUTOCOMPLETE_POINT[ch],
                             autocompleted_line, 0)
 
 
 def compute_total_syntax_error(lines: List[str]) -> int:
-    return sum(compute_syntax_error(line) for line in lines)
+    return sum(compute_syntax_score(line) for line in lines)
 
 
 def compute_middle_autocomplete_score(lines: List[str]) -> int:
-    incomplete_lines = []
-    for line in lines:
-        status, autocompleted_line = get_line_status(line)
-        if status == 2:
-            incomplete_lines.append(autocompleted_line)
-    scores = sorted([compute_autocomplete_score(autocompleted_line)
-                     for autocompleted_line in incomplete_lines])
+    scores = sorted([compute_autocomplete_score(line) 
+                     for line in lines
+                     if not get_first_corrupted_bracket(line)])
+    # check for odd number of lines
+    assert len(scores) % 2 == 1
     return scores[len(scores)//2]
 
 
 
 
-assert get_line_status('{()()()>') == (1, '>')
-assert compute_syntax_error('{()()()>') == 25137
-assert compute_syntax_error('()()(') == 0
-assert get_line_status('[({(<(())[]>[[{[]{<()<>>') == (2, '}}]])})]')
-assert compute_autocomplete_score('])}>') == 294
+assert get_first_corrupted_bracket('{()()()>') == '>'
+assert compute_syntax_score('{()()()>') == 25137
+assert compute_syntax_score('()()(') == 0
+assert autocomplete_line('[({(<(())[]>[[{[]{<()<>>') == list('}}]])})]')
+assert compute_autocomplete_score('[({(<(())[]>[[{[]{<()<>>') == 288957
 
 
 LINES = RAW.splitlines()
@@ -98,10 +109,11 @@ if __name__ == '__main__':
     contest_lines = contest_raw.splitlines()
     contest_sol_part1 = compute_total_syntax_error(contest_lines)
     print(contest_sol_part1)
-
+    assert contest_sol_part1 == 390993
 
     contest_sol_part2 = compute_middle_autocomplete_score(contest_lines)
     print(contest_sol_part2)
 
+    assert contest_sol_part2 == 2391385187
 
 
