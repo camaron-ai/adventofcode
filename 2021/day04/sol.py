@@ -75,8 +75,6 @@ def compute_bingo_score(numbers: List[int],
 def compute_last_bingo_score(numbers: List[int],
                              boards: List[Board]) -> int:
 
-    last = None
-
     for n in numbers:
         to_drop = []
         if len(boards) == 0:
@@ -93,9 +91,7 @@ def compute_last_bingo_score(numbers: List[int],
         for i, board_idx in enumerate(to_drop):
             boards.pop(board_idx - i)
 
-    if last is None:
-        raise ValueError('No winner!')
-    return last[0] * last[1]
+    raise ValueError('No winner!')
 
 
 if __name__ == '__main__':
