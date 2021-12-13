@@ -33,7 +33,7 @@ class Grid:
         queue = deque((i, j) for i in range(self.nr) for j in range(self.nc)) 
         flashed = set()
         while queue:
-            i, j = queue.pop()
+            i, j = queue.popleft()
             # sum 1 if the has not flashed yet
             if (i, j) not in flashed:
                 self.grid[i][j] += 1
