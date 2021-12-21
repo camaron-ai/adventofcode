@@ -59,16 +59,16 @@ def multiverse_game(p1: Player, p2: Player,
             else:
                 # if not, roll the dice for player 2
                 for rolls_p2, roll_count_p2 in possible_dice_outcomes.items():
-                    # if player 2 wins, sum roll_count_p2 to his count
+                    total_rolls = roll_count_p1 * roll_count_p2
+                    # there is a total of roll_count_p1 * roll_count_p2 to get to this combination
+                    # if player 2 wins, sum roll_count_p1 * roll_count_p2 to his count
                     parallel_p2 = move_player(p2, rolls_p2)
                     if parallel_p2[1] >= winning_score:
-                        count[1] += roll_count_p1 * roll_count_p2
+                        count[1] += total_rolls
                     else:
                         # otherwise, any player has won,
                         # so recursivily add the count of the parrelel game
-                        # there is a total of roll_count_p1 * roll_count_p2 to get to this combination
-                        # so, the number of wins of each player will be multiplied by roll_count_p1 * roll_count_p2
-                        total_rolls = roll_count_p1 * roll_count_p2
+                        # the number of wins of each player will be multiplied by roll_count_p1 * roll_count_p2
                         parralel_count = multiverse_game(parallel_p1, parallel_p2,
                                                          winning_score, memo)
                         count[0] += total_rolls * parralel_count[0]
